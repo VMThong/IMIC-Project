@@ -1,0 +1,645 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[5]:
+
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+plt.style.use('ggplot')
+get_ipython().run_line_magic('matplotlib', 'inline')
+import numpy as np
+import pingouin as pg
+
+
+# In[3]:
+
+
+titanic=sns.load_dataset('titanic')
+titanic.head()
+
+
+# In[4]:
+
+
+titanic.describe()
+
+
+# In[4]:
+
+
+titanic.info()
+
+
+# In[5]:
+
+
+titanic.sample(20)
+
+
+# In[13]:
+
+
+#Nhìn vào biểu đồ survived ta có thể nhận ra là số người đã chết là 549 (male:468 & female:81) người
+#Số người sống sót là 342 người (male:109 & female:233)
+plt.figure(figsize=(10,8))
+ax=sns.countplot(data=titanic,x='sex',hue='alive',palette='flare')
+
+ax.set_xlabel('Giới tính',fontname='arial',fontweight='semibold',color='black',fontsize=20)
+ax.set_ylabel('Người',fontname='arial',fontweight='semibold',color='black',fontsize=20)
+
+ax.set_xticklabels(['Nam','Nữ'])
+    
+
+for p in ax.patches:
+        ax.annotate("%.0f" % p.get_height(), (p.get_x() + p.get_width() / 2., p.get_height()),
+                 ha='center', va='center', fontsize=15, color='black', xytext=(0, 10),
+                 textcoords='offset points')
+        
+handles, labels = ax.get_legend_handles_labels()
+for i in labels:
+    labels=['Chết','Sống']
+
+ax.legend(handles=handles,labels=labels, bbox_to_anchor=(1.02, 1.0), loc='upper left')    
+
+
+# In[149]:
+
+
+data_phan_tram
+
+
+# In[88]:
+
+
+# Từ đó ta nhận ra là 61.62% số người trên tàu Titanic đã không thể sống sót
+plt.figure(figsize=(10,8))
+data_phan_tram=titanic.groupby('alive').count()
+data_phan_tram['survived']
+total=sum(data_phan_tram['survived'])
+label_pie=['Chết','Sống']
+
+plt.pie(data=data_phan_tram,x='survived',labels=label_pie,textprops=dict(fontname='arial',fontsize=20)
+       ,autopct=lambda p:f'{p:.2f}%, ({p*total/100:.0f})')
+
+
+# In[254]:
+
+
+# ✓ Ta nhận ra được vé hạng 3 chiếm đa số, trong đó vé hạng 1 và hạng 2 thì xêm xêm
+# nhau (chênh lệch số vé không đáng kể).
+# • Pclass=1: 216 vé (Sống: 136 & Chết: 80)
+# • Pclass=2: 184 vé (Sống: 87 & Chết: 97)
+# • Pclass=3: 491 vé (Sống: 119 & Chết: 372)
+
+plt.figure(figsize=(15,8))
+plt.subplot(1,2,1)
+ax=sns.countplot(data=titanic,x='pclass',hue='alive',palette='plasma')
+ax.set_xlabel('Vé hạng',fontname='arial',fontweight='semibold',color='black',fontsize=20)
+ax.set_ylabel('Người',fontname='arial',fontweight='semibold',color='black',fontsize=20)
+
+    
+for p in ax.patches:
+        ax.annotate("%.0f" % p.get_height(), (p.get_x() + p.get_width() / 2., p.get_height()),
+                 ha='center', va='center', fontsize=15, color='black', xytext=(0, 10),
+                 textcoords='offset points')
+handles, labels = ax.get_legend_handles_labels()
+for i in labels:
+    labels=['Chết','Sống']
+
+ax.legend(handles=handles,labels=labels, bbox_to_anchor=(0.2, 1.0))
+
+plt.subplot(1,2,2)
+ax=sns.countplot(data=titanic,x='pclass',palette='mako')
+ax.set_xlabel('Vé hạng',fontname='arial',fontweight='semibold',color='black',fontsize=20)
+ax.set_ylabel('Người',fontname='arial',fontweight='semibold',color='black',fontsize=20)
+
+    
+for p in ax.patches:
+        ax.annotate("%.0f" % p.get_height(), (p.get_x() + p.get_width() / 2., p.get_height()),
+                 ha='center', va='center', fontsize=15, color='black', xytext=(0, 10),
+                 textcoords='offset points')
+
+
+# In[334]:
+
+
+# ✓ Trên tàu thì số lượng nam chiếm đa số (sex)
+# • Male (Nam): 577 người
+# • Female (Nữ): 314 người
+plt.figure(figsize=(10,8))
+ax=sns.countplot(data=titanic,x='sex',palette='magma_r')
+ax.set_xlabel('Giới tính',fontname='arial',fontweight='semibold',color='black',fontsize=20)
+ax.set_ylabel('Người',fontname='arial',fontweight='semibold',color='black',fontsize=20)
+ax.set_xticklabels(['Nam','Nữ'])
+    
+for p in ax.patches:
+        ax.annotate("%.0f" % p.get_height(), (p.get_x() + p.get_width() / 2., p.get_height()),
+                 ha='center', va='center', fontsize=15, color='black', xytext=(0, 10),
+                 textcoords='offset points')
+
+
+# In[170]:
+
+
+tinh_trang_hon_nhan=pd.melt(titanic,id_vars='index',value_vars=['sibsp', 'parch', 'alone'])
+tinh_trang_hon_nhan.to_csv('D:/Test/hello.csv')
+
+
+# In[216]:
+
+
+# ✓ Những người độc thân lên tàu cũng chiếm rất nhiều (sibsp, parch, alone)
+# • Với biểu đồ trên ta có thể thấy có 608 người không phải anh chị em hoặc vợ
+# chồng trên chuyến tàu này.
+# • Có 209 người có 1 người anh chị em hoặc vợ chồng trên chuyến tàu này.
+# • Tương tự cho các chỉ số còn lại.
+# • Ở đây bạn có thể nhìn thấy những người có số anh chị em hoặc vợ chồng trên
+# tàu nhiều nhất (5 và 8) thì không một ai có thể sống sót sau thảm hoạ tàu
+# Titanic.
+# • Với 3 hoặc 4 thì tỷ lệ sống sót cũng có nhưng rất thấp.
+# • Với 2 thì tỷ lệ người sống sót đạt gần 50% người không sống sót.
+# • Với 0 thì tỷ lệ người sống sót chỉ bằng 50% người không sống sót.
+# • Với 1 thì ta có thể nhìn thấy đây là trường hợp duy nhất mà số người sống sót
+# nhiều hơn số người không sống sót.
+
+
+# In[260]:
+
+
+# ✓ Những người độc thân lên tàu cũng chiếm rất nhiều (sibsp, parch, alone)
+# • Với biểu đồ trên ta có thể thấy có 608 người không phải anh chị em hoặc vợ
+# chồng trên chuyến tàu này.
+count_sibsp=len(titanic.sibsp[(titanic.sibsp>=1) & (titanic.parch==0)])
+count_parch=len(titanic.parch[(titanic.sibsp==0) & (titanic.parch>=1)])
+count_alone=len(titanic.alone[titanic.alone==True])
+count_sibsp_parch=len(titanic[(titanic.sibsp>=1) & (titanic.parch>=1)])
+
+mang_mau=sns.color_palette(palette='muted',n_colors=6)
+gia_tri_x=[count_sibsp,count_parch,count_alone,count_sibsp_parch]
+gia_tri_x
+plt.figure(figsize=(10,10))
+plt.pie(x=gia_tri_x,labels=['sibsp', 'parch', 'alone','sibsp and parch'],textprops=dict(fontname='arial',fontsize=15)
+       ,autopct=lambda p:f'{p:.2f}%, ({p*sum(gia_tri_x)/100:.0f})',colors=mang_mau)
+
+
+# In[249]:
+
+
+# • Có 209 người có 1 người anh chị em hoặc vợ chồng trên chuyến tàu này.
+# • Tương tự cho các chỉ số còn lại.
+# • Ở đây bạn có thể nhìn thấy những người có số anh chị em hoặc vợ chồng trên
+# tàu nhiều nhất (5 và 8) thì không một ai có thể sống sót sau thảm hoạ tàu
+# Titanic.
+# • Với 3 hoặc 4 thì tỷ lệ sống sót cũng có nhưng rất thấp.
+# • Với 2 thì tỷ lệ người sống sót đạt gần 50% người không sống sót.
+# • Với 0 thì tỷ lệ người sống sót chỉ bằng 50% người không sống sót.
+# • Với 1 thì ta có thể nhìn thấy đây là trường hợp duy nhất mà số người sống sót
+# nhiều hơn số người không sống sót.
+plt.figure(figsize=(15,15))
+list_nguoi=['parch','alone','sibsp']
+
+for stt,i in enumerate(list_nguoi):
+    plt.subplot(3,1,stt+1)
+    ax=sns.countplot(data=titanic,x=i,hue='alive',palette='Blues_d')
+    ax.set_ylabel('Người')
+    for p in ax.patches:
+        if p.get_height()!=0:
+            ax.annotate("%.0f" % p.get_height(), (p.get_x() + p.get_width() / 2., p.get_height()),
+                     ha='center', va='center', fontsize=15, color='black', xytext=(0, 10),
+                     textcoords='offset points')
+    ax.legend(bbox_to_anchor=(1.0, 1.0), loc='upper left')
+
+
+# In[294]:
+
+
+# ✓ Đa phần những người trên tàu lên tàu từ Southampton (embarked)
+# • C là Cherbourg (Sống: 93 & Chết: 75) – Tỷ lệ: 18.9% (tổng 168)
+# • Q là Queenstown (Sống: 30 & Chết: 47) – Tỷ lệ: 8.66% (tổng 77)
+# • S là Southampton (Sống: 217 & Chết: 427) – Tỷ lệ: 72.44% (tổng 644)
+# Và thật bất ngờ là tỷ lệ sống sót khi lên tàu tại Cherbourg lại là cao nhất khi số
+# người sống sót lớn hơn số người không sống sót.
+# o Tỷ lệ sống sót của Queenstown xếp thứ 2 khi số người sống sót vượt quá 50% số
+# người không sống sót.
+# o Và Các bạn cũng đã thấy được tỷ lệ sống sót của những người lên tàu ở
+# Southampton thấp thế nào, chưa đạt tới 50%. Hơn nữa tỷ lệ người lên tàu ở đây
+# lại là cao nhất. Từ đó ta rút ra chủ yếu những người không sống sót trên tàu
+# Titanic chính là lên tàu tại Southampton.
+
+plt.figure(figsize=(10,20))
+plt.subplot(2,1,1)
+ax=sns.countplot(data=titanic,x='embarked',hue='alive',palette='Greens_d')
+for p in ax.patches:
+        ax.annotate("%.0f" % p.get_height(), (p.get_x() + p.get_width() / 2., p.get_height()),
+                 ha='center', va='center', fontsize=15, color='black', xytext=(0, 10),
+                 textcoords='offset points')
+        
+plt.subplot(2,1,2)
+ax=plt.pie(x=list(titanic.embarked.value_counts()),labels=['Cherbourg','Queenstown','Southampton'],
+           textprops=dict(fontname='arial',fontsize=15)
+       ,autopct=lambda p:f'{p:.2f}%, ({p*sum(gia_tri_x)/100:.0f})',colors=mang_mau,radius=1.2)
+
+
+# In[326]:
+
+
+# ✓ Nhìn vào biểu đồ fare ta có thể thấy giá vẻ rẻ trên tàu Titanic chiếm đa số (Thậm chí có vé tặng với giá 0 đồng).
+# ✓ Còn lượng vé giá cao thì rất nhỏ giọt. Đặc biệt vé hạng đặc biệt có giá trên 500 đô không nhiều.
+plt.figure(figsize=(15,7))
+mau_pale=sns.blend_palette(['yellow','red','blue'],20)
+ax1=sns.histplot(data=titanic,x='fare',bins=20)
+for p in enumerate(ax1.patches):
+        if p[1].get_height()!=0:
+            p[1].set(color=mau_pale[p[0]])
+            ax1.annotate("%.0f"% p[1].get_height(),xy=(p[1].get_x()+p[1].get_width()/2.,p[1].get_height()),
+                         textcoords='offset points', xytext=(0,10),color='black',fontsize=10,ha='center',va='center')
+
+
+# In[332]:
+
+
+# ✓ Nhìn vào biểu đồ age ta nhận ra được chủ yếu những người lên tàu có độ tuổi từ 20 đến dưới 40 tuổi.
+# ✓ Ở đây có điểm đặc biệt là ở độ tuổi 0 lại khá cao (trẻ sơ sinh). Điều này chứng tỏ rất nhiều 
+# người trên tàu Titanic ngày đó là trẻ sơ sinh.
+# ✓ Còn các nhóm độ tuổi như dưới 20 và từ khoảng 50 trở lên thì không có nhiều, nói chung chiếm thiểu số trên con tàu này.
+
+plt.figure(figsize=(15,7))
+mau_pale=sns.blend_palette(['yellow','red','blue'],20)
+ax1=sns.histplot(data=titanic,x='age',bins=[0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80])
+ax1.set_xlabel('Độ tuổi',fontname='arial',fontweight='semibold',color='black',fontsize=20)
+ax1.set_ylabel('Số lượng',fontname='arial',fontweight='semibold',color='black',fontsize=20)
+
+for p in enumerate(ax1.patches):
+        if p[1].get_height()!=0:
+            p[1].set(color=mau_pale[p[0]])
+            ax1.annotate("%.0f"% p[1].get_height(),xy=(p[1].get_x()+p[1].get_width()/2.,p[1].get_height()),
+                         textcoords='offset points', xytext=(0,10),color='black',fontsize=10,ha='center',va='center')
+
+
+# # Giả định lý do
+
+# ## Về tỷ lệ chết
+
+# - Kết quả dưới cho thấy khoảng 62% người chết và 38% người còn sống sau thảm họa tàu Titanic.
+# - Ta có thể xem xét biến này với các biến khác, để phán đoán liệu có sự tương quan giữa tỷ lệ chết và các biến còn lại hay không ?
+
+# In[333]:
+
+
+plt.figure(figsize=(10,8))
+data_phan_tram=titanic.groupby('alive').count()
+data_phan_tram['survived']
+total=sum(data_phan_tram['survived'])
+label_pie=['Chết','Sống']
+
+plt.pie(data=data_phan_tram,x='survived',labels=label_pie,textprops=dict(fontname='arial',fontsize=20)
+       ,autopct=lambda p:f'{p:.2f}%, ({p*total/100:.0f})')
+
+
+# ###  Tỷ lệ chết có tương quan đến giá vé?
+
+# - Có thể thấy với số lượng giá vé lớn hơn 100, số lượng mẫu rất ít, điều này có thể dẫn đến việc gia tăng phương sai mẫu trong khi tác động của số lượng giá vé lớn hơn 100, cũng như ảnh hưởng đến trung bình của nhóm
+# - Vì vậy nên giới hạn số lượng mẫu chỉ trong phạm vi giá vé từ 100 trở xuống
+
+# In[7]:
+
+
+titanic.alive.value_counts()
+
+
+# In[8]:
+
+
+titanic.groupby('alive').mean()
+
+
+# In[9]:
+
+
+titanic.groupby('alive').std()
+
+
+# In[10]:
+
+
+plt.figure(figsize=(15,7))
+ax1=sns.histplot(data=titanic,x='fare',bins=10,hue='alive',multiple='dodge')
+
+#
+for p in ax1.patches:
+        if p.get_height()!=0:
+            ax1.annotate("%.0f" % p.get_height(), (p.get_x() + p.get_width() / 2., p.get_height()),
+                     ha='center', va='center', fontsize=15, color='black', xytext=(0, 10),
+                     textcoords='offset points')
+
+
+# Sau khi giới hạn mẫu cho giá vé từ 100 trở xuống:
+# - Phương sai có xu hướng gần nhau hơn (từ chênh lệch phương sai 2 nhóm khoảng 35, giảm xuống chênh lệch còn 8)
+# - Giá trị trung bình do không bị ảnh hưởng bởi những giá trị ngoại lai nên sẽ giảm xuống và sẽ chính xác hơn do phạm vi trong giá vé dưới 100 đã chiếm khoảng 94% (838*100%/891) lượng dữ liệu của mẫu.
+
+# In[25]:
+
+
+mean_no=titanic[titanic.fare<=100].fare[titanic.alive=='no'].mean()
+mean_yes=titanic[titanic.fare<=100].fare[titanic.alive=='yes'].mean()
+
+
+# In[26]:
+
+
+titanic[titanic.fare<=100].alive.value_counts()
+
+
+# In[27]:
+
+
+titanic[titanic.fare<=100].groupby('alive').mean()
+
+
+# In[28]:
+
+
+titanic[titanic.fare<=100].groupby('alive').std()
+
+
+# Giá trị t-value= (30.1-18.1)/(1.59)=7.54 > 1.96 => 2 nhóm hoàn toàn khác biệt nhau. 
+# 
+# Tiến hành tìm nguyên nhân gây ra sư khác biệt này:
+# - Thông qua biểu đồ hist đã được điều chỉnh như bên dưới có thể thấy những người sống sót là những người mua vé có giá vé mắc hơn, cụ thể là giá vé >50-100. Những người mua giá vé thấp hơn mức này cho thấy tỷ lệ chết nhiều hơn.
+# - Khoảng 93% người đã chết mua vé ̀́từ 50 trở xuống như vậy chỉ có tầm 7% người mua giá vé̀ >50-100 là chết.
+# - Khoảng 77% người còn sống mua vé ̀từ 50 trở xuống, và 23% người >50-100 còn sống.
+# - Như vậy tỷ lệ chết nếu người mua vé dưới 50 P(A=chết|B= <=50) là: P= (0.93*0.64)/(0.87)=0.68 => 68% người mua vé từ dưới 50 sẽ chết. 
+# - Như vậy tỷ lệ chết nếu người mua vé trên 50 P(A=chết|B= >50) là: P= (0.07*0.64)/(0.36)=0.68 => 12% người mua vé từ >50-100 sẽ chết. 
+# 
+# Vì tỷ lệ chết giữa 2 loại giá vé chênh lệch rất lớn (tới 56%), do đó ta có thể giả định rằng những người giàu hơn sẽ được ưu tiên lên thuyền cứu hộ trước những người nghèo hơn và do đó tỷ lệ sống sót của họ sẽ cao hơn.
+# 
+
+# In[29]:
+
+
+plt.figure(figsize=(15,7))
+ax1=sns.histplot(data=titanic[titanic.fare<=100],x='fare',bins=[0,10,20,30,40,50,60,70,80,90,100],hue='alive',kde=True)
+
+for stt,p in enumerate(ax1.patches):
+        if stt<len(ax1.patches)/2 :
+            ax1.annotate("%.0f" % p.get_height(), (p.get_x() + p.get_width() / 2., p.get_height()),
+                     ha='center', va='center', fontsize=10, color='blue', xytext=(0, 10),
+                     textcoords='offset points')
+        elif stt>=len(ax1.patches)/2 :
+            ax1.annotate("%.0f" % p.get_height(), (p.get_x() + p.get_width() / 2., p.get_height()),
+                     ha='center', va='center', fontsize=10, color='red' ,xytext=(0, 10),
+                     textcoords='offset points')
+        
+ax1.axvline(x=mean_no,lw=3,color='red')
+ax1.text(mean_no+1,250,f'Mean={mean_no:.2f}',fontsize=12, color='red',fontweight='bold')
+ax1.axvline(x=mean_yes,lw=3,color='blue')
+ax1.text(mean_yes+1,250,f'Mean={mean_yes:.2f}',fontsize=12, color='blue',fontweight='bold')
+ax1.set_xlim(0,100)
+
+
+# In[23]:
+
+
+#Welck test khi Unpaired sample
+pg.ttest(titanic[(titanic.fare<=100) & (titanic.alive=='no')].fare,
+         titanic[(titanic.fare<=100) & (titanic.alive=='yes')].fare,alternative='less')
+
+
+# ### Tỷ lệ chết có tương quan với độ tuổi?
+
+# - Biểu đồ hist bên dưới ở 2 nhóm "sống" và "chết" có hình dạng khá là giống nhau.
+# - Độ lệch chuẩn giữa 2 nhóm "sống" và "chết" không chênh lệch nhau lớn
+# - Tuy nhiên vì giá trị trung bình gần nhau, nên nhiều khả năng sự khác biệt giữa các nhóm tuổi không có ý nghĩa thống kê. Ta tiến hành tính toán t-value do chỉ có 2 nhóm và t-value= (30.6-28.3)/0.99=2.32>1.96 => 2 nhóm "sống" và "chết" có sự khác biệt về độ tuổi.
+# - Như vậy có thể thấy độ tuổi có ảnh hưởng đến tỷ lệ sống chết. Tuy nhiên, điều đưa đến câu hỏi khác là nhóm tuổi nào gây nên sự khác biệt này trong 2 nhóm ?
+
+# In[16]:
+
+
+titanic.alive.value_counts()
+
+
+# In[20]:
+
+
+titanic.groupby('alive').std()
+
+
+# In[17]:
+
+
+titanic.groupby('alive').mean()
+
+
+# In[18]:
+
+
+pg.ttest(titanic[titanic.alive=='yes'].age,titanic[titanic.alive=='no'].age,alternative='less')
+
+
+# In[21]:
+
+
+pg.ttest(titanic[titanic.alive=='no'].age,titanic[titanic.alive=='yes'].age,alternative='greater')
+
+
+# In[30]:
+
+
+pg.ttest(titanic[titanic.alive=='no'].age,titanic[titanic.alive=='yes'].age)
+
+
+# Từ biểu đồ ta thấy rằng nhóm tuổi >0-10 có tỷ lệ sống cao hơn hẳn chết. Như vậy nhiều khả năng nhóm tuổi này sẽ tác động đến tỷ lệ sống chết và vì vậy dẫn đến sự khác biệt giữa 2 nhóm.
+
+# In[18]:
+
+
+plt.figure(figsize=(15,7))
+ax1=sns.histplot(data=titanic,x='age',bins=[0,10,20,30,40,50,60,70,80],hue='alive')
+for stt,p in enumerate(ax1.patches):
+        if stt<len(ax1.patches)/2 :
+            ax1.annotate("%.0f" % p.get_height(), (p.get_x() + p.get_width() / 2., p.get_height()),
+                     ha='center', va='center', fontsize=10, color='blue', xytext=(0, 10),
+                     textcoords='offset points')
+        elif stt>=len(ax1.patches)/2 :
+            ax1.annotate("%.0f" % p.get_height(), (p.get_x() + p.get_width() / 2., p.get_height()),
+                     ha='center', va='center', fontsize=10, color='red' ,xytext=(0, 10),
+                     textcoords='offset points')
+mean_no=titanic.age[titanic.alive=='no'].mean()
+mean_yes=titanic.age[titanic.alive=='yes'].mean()
+ax1.axvline(x=mean_no,lw=3,color='red')
+ax1.text(mean_no+5,140,f'Mean={mean_no:.2f}',fontsize=12, color='red',fontweight='bold')
+ax1.axvline(x=mean_yes,lw=3,color='blue')
+ax1.text(mean_yes-20,140,f'Mean={mean_yes:.2f}',fontsize=12, color='blue',fontweight='bold')
+
+
+# Kiểm tra khác biệt giữa 2 nhóm khi không có nhóm <10 tuổi:
+# - t-value=(32.27-32.09)/1.01=0.178<1.96
+# - Như vậy ta có thể kết luận nhóm tuổi <10 tuổi là nguyên nhân chính gây ra sự khác biệt giữa 2 nhóm "sống" và "chết". Việc loại bỏ nhóm này đi cho thấy không có sự khác biệt nào về tỷ lệ chết và sống ở các nhóm tuổi cao hơn.
+
+# In[19]:
+
+
+titanic[titanic.age>10].alive.value_counts()
+
+
+# In[20]:
+
+
+titanic[titanic.age>10].groupby('alive').mean()
+
+
+# In[21]:
+
+
+titanic[titanic.age>10].groupby('alive').std()
+
+
+# In[39]:
+
+
+pg.ttest(titanic[(titanic.age>10) & (titanic.alive=='no')].age,titanic[(titanic.age>10) & (titanic.alive=='yes')].age)
+
+
+# In[22]:
+
+
+def nhom_tuoi(a):
+    if a<=10:
+        return '0-10'
+    elif a>10 and a<=20:
+        return '10-20'
+    elif a>20 and a<=30:
+        return '20-30'
+    elif a>30 and a<=40:
+        return '30-40'
+    elif a>40 and a<=50:
+        return '40-50'
+    elif a>50 and a<=60:
+        return '50-60'
+    elif a>60 and a<=70:
+        return '60-70'
+    elif a>70 and a<=80:
+        return '70-80'
+
+
+# In[23]:
+
+
+titanic1=titanic
+titanic1['Nhóm tuổi']=titanic1.age.apply(nhom_tuoi)
+
+
+# In[24]:
+
+
+titanic1['Nhóm tuổi'].value_counts()
+
+
+# - Từ swarmplot có thể khẳng định thêm về việc nhóm tuổi 0-10 có sự khác biệt lớn giữa 2 nhóm.
+# - Trong khi các nhóm tuổi khác có xu hướng là chết nhiều hơn sống, và tỷ lệ chết/sống khá đồng đều. Thì nhóm tuổi 0-10 thể hiện tuổi càng thấp thì tỷ lệ sống càng cao.
+# 
+# Từ các kết quả phát hiện được, ta có thể đưa ra giả định rằng nhóm tuổi từ 0-10 tuổi sẽ được ưu tiên đưa lên thuyền cứu sinh và vì vậy tỷ lệ sống cũng cao hơn.
+# Đối với các nhóm tuổi khác, kết quả cho thấy không có sự khác biệt gì về tỷ lệ sống và chết. Điều này hàm ý rằng những nhóm tuổi khác không có sự thiên vị nào trong quá trình sơ tán lên thuyền cứu sinh.
+
+# In[25]:
+
+
+plt.figure(figsize=(15,10))
+ax1=sns.swarmplot(data=titanic1,x='alive',y='age',hue='Nhóm tuổi')
+handles, labels = ax1.get_legend_handles_labels()
+order=[3,4,0,1,6,2,5,7]
+ax1.legend(handles=[handles[i] for i in order], labels=[labels[i] for i in order],title='Nhóm tuổi')
+
+
+# ### Tỷ lệ chết có tương quan với giới tính?
+
+# In[26]:
+
+
+titanic.alive.value_counts()
+
+
+# In[27]:
+
+
+titanic.sex.value_counts()
+
+
+# In[28]:
+
+
+titanic.groupby(['alive','sex']).count()
+
+
+# - Từ hist plot ta có thể thấy nam có số lượng chết nhiều hơn nữ. 
+# - Tuy nhiên, việc để biểu đồ count plot nhằm so sánh 2 biến dạng thứ bậc thì rất khó để mường tượng sự khác biệt về tỷ lệ chết, sống của nam và nữ. Do đó, một dạng biểu đồ khác gọi là biểu đồ hình tròn lồng nhau được sử dụng để trực quan hóa hơn những dữ liệu này
+
+# In[29]:
+
+
+plt.figure(figsize=(15,7))
+ax=sns.countplot(data=titanic,x='sex',hue='alive')
+
+for i in ax.patches:
+    ax.annotate("%.0f" % i.get_height(), (i.get_x() + i.get_width() / 2., i.get_height()),
+                     ha='center', va='center', fontsize=10, color='black', xytext=(0, 10),
+                     textcoords='offset points')
+
+
+# In[30]:
+
+
+data_alive_sex=titanic.groupby(['alive','sex']).count()
+data_alive_sex
+
+
+# In[31]:
+
+
+no_female=data_alive_sex.loc['no','female'].survived
+yes_female=data_alive_sex.loc['yes','female'].survived
+no_male=data_alive_sex.loc['no','male'].survived
+yes_male=data_alive_sex.loc['yes','male'].survived
+
+
+# Biểu đồ hình tròn lồng nhau dưới đây gồm 2 tầng dữ liệu:
+# - Tầng 1:Biểu thị tỷ lệ sống và chết tổng thể với 549 người chết-chiếm 61.62%, và 342 người còn sống chiếm 38.32% trong tổng số người trên tàu từ dữ liệu titanic.
+# - Tầng 2: biểu thị thêm về các phần dữ liệu của tầng 1. 
+#     + Về số lượng người chết, có tới 468 nam trong 577 nam  nằm trong nhóm chết, chỉ 81 nữ trong 314 nữ nằm trong nhóm này.
+#     + Còn ở nhóm sống thì có tới 233 nữ còn sống trong khi số còn sống ở nam là 109 người.
+#     
+#     
+# - Một điều thú vị là biểu đồ này cơ chế như một sơ đồ cây tức là có thể dùng để biểu thị cho định lý bayes để phán đoán xác suất khi biết một điều kiện nào đó.
+#     + Chẳng hạn ta muốn biết nếu là nữ thì % sống là bao nhiêu. Áp dụng công thức Bayes trong trường hợp này cho thấy nếu là nữ thì tỉ lệ sống P= (0.15*0.61)/0.35=0.26 tức 26%. Giá trị này tương đương với phần nữ nằm trong vùng còn sống ở tầng 2.
+#     + Điều này giúp ta dễ dàng thấy được nếu là nữ thì tỷ lệ sống sót sẽ cao hơn nam khoảng 14%, và tỷ lệ tử vong sẽ thấp hơn nam là 42%.
+#     
+# Cuối cùng, từ biểu đồ ở dưới ta đưa ra giả định rằng khi tàu bắt chìm, nữ giới sẽ được ưu tiên lên thuyền cứu sinh hơn nam giới và do đó sẽ gây nên sự khác biệt đáng kể về tỷ lệ sống và chết giữa 2 nhóm.
+
+# In[32]:
+
+
+plt.figure(figsize=(10,8))
+data_phan_tram=titanic.groupby('alive').count()
+data_phan_tram['survived']
+total=sum(data_phan_tram['survived'])
+label_pie=['Chết','Sống']
+data_hinh_tron_nho=[no_female,no_male,yes_female,yes_male]
+total1=sum(data_hinh_tron_nho)
+label_hinh_tron_nho=['Nữ','Nam','Nữ','Nam']
+so_luong_nam_nu=[81,468,233,109]
+hinh_tron_lon= plt.pie(data=data_phan_tram,x='survived',labels=label_pie,textprops=dict(fontname='arial',fontsize=15)
+       ,autopct=lambda p:f'{p:.2f}%, ({p*total/100:.0f})',pctdistance=0.8,colors=['#FFB600','#09A0DA'],radius=1.2)
+
+hinh_tron_nho,texts,autotexts= plt.pie(x=data_hinh_tron_nho,textprops=dict(fontname='arial',fontsize=10)
+        ,autopct=lambda p:f'{p:.2f}%',pctdistance=0.75,colors=['#FFCE53','#FFDA7E','#B3E7FB','#7FD6F7'],radius=0.8)
+
+for stt,i in enumerate(autotexts):
+     i.set_text(f'{i.get_text()} - {label_hinh_tron_nho[stt]} \n ({so_luong_nam_nu[stt]})')
+
+        
+hinh_tron=plt.Circle((0,0),0.4,color='white')
+plt.axis('equal')
+plt.gca().add_artist(hinh_tron)
+
